@@ -78,12 +78,10 @@
         </developer>
     </developers>
   
-    <properties>
-        <sonar.organization>rafmo20d-1</sonar.organization>
-        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-    </properties>
+   
 
-    <properties>
+
+
       
         <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
 
