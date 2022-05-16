@@ -3,6 +3,7 @@ package de.adorsys.opba.tppbankingapi.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.adorsys.opba.protocol.api.dto.context.UserAgentContext;
 import de.adorsys.opba.protocol.api.dto.parameters.ExtraRequestParam;
+import de.adorsys.opba.protocol.api.dto.request.Analytics;
 import de.adorsys.opba.protocol.api.dto.request.FacadeServiceableRequest;
 import de.adorsys.opba.protocol.api.dto.request.accounts.AisAuthorizationStatusRequest;
 import de.adorsys.opba.protocol.api.dto.request.accounts.ListAccountsRequest;
@@ -25,6 +26,7 @@ import de.adorsys.opba.restapi.shared.GlobalConst;
 import de.adorsys.opba.restapi.shared.mapper.FacadeResponseBodyToRestBodyMapper;
 import de.adorsys.opba.restapi.shared.service.FacadeResponseMapper;
 import de.adorsys.opba.tppbankingapi.ais.model.generated.AccountList;
+import de.adorsys.opba.tppbankingapi.ais.model.generated.DeleteMetadata;
 import de.adorsys.opba.tppbankingapi.ais.model.generated.SessionStatusDetails;
 import de.adorsys.opba.tppbankingapi.ais.model.generated.TransactionsResponse;
 import de.adorsys.opba.tppbankingapi.ais.model.generated.UpdateAisExternalSessionStatus;
@@ -146,7 +148,7 @@ public class TppBankingApiAisController implements TppBankingApiAccountInformati
             String bookingStatus,
             Boolean deltaList,
             Boolean online,
-            Boolean analytics,
+            String analytics,
             Integer page,
             Integer pageSize
     ) {
@@ -165,7 +167,7 @@ public class TppBankingApiAisController implements TppBankingApiAccountInformati
                                 .bankProfileId(bankProfileID)
                                 .anonymousPsu(null != xPsuAuthenticationRequired && !xPsuAuthenticationRequired)
                                 .online(online)
-                                .withAnalytics(analytics)
+                                .withAnalytics(analytics == null ? Analytics.DISABLED : Analytics.valueOf(analytics.toUpperCase()))
                                 .build()
                         )
                         .accountId(accountId)
@@ -239,7 +241,7 @@ public class TppBankingApiAisController implements TppBankingApiAccountInformati
 
     @Override
     @SuppressWarnings("unchecked")
-    public CompletableFuture<ResponseEntity<Void>> deleteConsent(UUID serviceSessionId, UUID xRequestID,
+    public CompletableFuture<ResponseEntity<Void>> deleteConsent(UUID xRequestID, UUID serviceSessionId, DeleteMetadata requestBody,
                                                                  String xTimestampUTC, String xRequestSignature, String fintechId,
                                                                  String serviceSessionPassword, String fintechDataPassword, Boolean deleteAll) {
         return deleteConsent.execute(
@@ -251,7 +253,7 @@ public class TppBankingApiAisController implements TppBankingApiAccountInformati
                                 .serviceSessionId(serviceSessionId)
                                 .requestId(xRequestID)
                                 .build()
-                        )
+                        ).details(updateMetadataDetailsFromApiMapper.map(requestBody))
                         .deleteAll(deleteAll)
                         .build()
         ).thenApply(it -> (ResponseEntity<Void>) mapper.translate(it, body -> null));
@@ -338,5 +340,7 @@ public class TppBankingApiAisController implements TppBankingApiAccountInformati
     @Mapper(componentModel = GlobalConst.SPRING_KEYWORD, implementationPackage = API_MAPPERS_PACKAGE)
     public interface UpdateMetadataDetailsFromApiMapper {
         UpdateMetadataDetails map(UpdateMetadata body);
+
+        UpdateMetadataDetails map(DeleteMetadata body);
     }
 }
